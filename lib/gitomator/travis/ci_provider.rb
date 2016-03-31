@@ -11,7 +11,7 @@ module Gitomator
       # ---------------------- Static Factory Methods --------------------------
 
       class << self
-        private :new
+        private :new, :_find_repo
       end
 
       def self.with_travis_access_token(access_token, opts = {})
