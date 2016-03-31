@@ -11,26 +11,59 @@ module Gitomator
       # ---------------------- Static Factory Methods --------------------------
 
       class << self
-        private :new, :_find_repo
+        private :new
       end
 
-      def self.with_travis_access_token(access_token, opts = {})
-        return new(::Travis, access_token, opts)
+
+      #
+      # Important: You will need to generate a Travis token (simple to do
+      # with Travis' CLI - `travis login` followed by `travis token`)
+      #
+      # @param access_token [String] - An auth token for Travis
+      # @param github_org [String] - The default GitHub organization
+      #
+      def self.with_travis_access_token(access_token, github_org=nil, opts = {})
+        return new(
+          ::Travis::Client.new({
+            :uri          => ::Travis::Client::ORG_URI,
+            :access_token => access_token
+          }),
+          {org: github_org}
+        )
       end
 
-      def self.with_travis_pro_access_token(access_token, opts = {})
-        return new(::Travis::Pro, access_token, opts)
+
+      #
+      # Important: You will need to generate a Travis Pro token (simple to do
+      # with Travis' CLI - `travis login` followed by `travis token`)
+      #
+      # @param access_token [String] - An auth token for Travis Pro
+      # @param github_org [String] - The default GitHub organization
+      #
+      def self.with_travis_pro_access_token(access_token, github_org=nil, opts = {})
+        return new(
+          ::Travis::Client.new({
+            :uri          => ::Travis::Client::PRO_URI,
+            :access_token => access_token
+          }),
+          {org: github_org}
+        )
       end
+
 
       # ------------------------------------------------------------------------
 
-      def initialize(travis_module, access_token, opts)
-        raise "Access_token is nil/empty" if access_token.nil? || access_token.empty?
-        @travis = travis_module
+
+      #
+      # @param travis_client [Travis::Client::Session]
+      # @param opts [Hash]
+      # => @param :org [String] - Default GitHub organization
+      #
+      def initialize(travis_client, opts)
+        raise "Travis client is nil" if travis_client.nil?
+        @travis = travis_client
         @org = opts[:org]
         @repo_name_resolver = Gitomator::Util::Repo::NameResolver.new(@org)
-
-        @travis.access_token = access_token
       end
 
       def name
@@ -38,23 +71,23 @@ module Gitomator
       end
 
 
-      def _find_repo(repo)
-        @travis::Repository.find(@repo_name_resolver.full_name(repo))
+      def _enable_disable_ci(repo)
+        begin
+          yield @travis.repo(@repo_name_resolver.full_name(repo))
+        rescue ::Travis::Client::NotFound
+          return false
+        end
       end
 
+
       def enable_ci(repo, opts={})
-        repo = _find_repo(repo)
-        unless repo.nil?
-          repo.enable()
-        end
+        _enable_disable_ci(repo) {|r| r.enable}
       end
 
       def disable_ci(repo, opts={})
-        repo = _find_repo(repo)
-        unless repo.nil?
-          repo.disable()
-        end
+        _enable_disable_ci(repo) {|r| r.disable}
       end
+
 
 
 
