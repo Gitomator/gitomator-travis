@@ -71,21 +71,25 @@ module Gitomator
       end
 
 
-      def _enable_disable_ci(repo)
+      def _find_repo_and_execute_block(repo)
         begin
           yield @travis.repo(@repo_name_resolver.full_name(repo))
         rescue ::Travis::Client::NotFound
-          return false
+          return nil
         end
       end
 
 
       def enable_ci(repo, opts={})
-        _enable_disable_ci(repo) {|r| r.enable}
+        _find_repo_and_execute_block(repo) {|r| r.enable}
       end
 
       def disable_ci(repo, opts={})
-        _enable_disable_ci(repo) {|r| r.disable}
+        _find_repo_and_execute_block(repo) {|r| r.disable}
+      end
+
+      def ci_enabled?(repo)
+        _find_repo_and_execute_block(repo) {|r| r.reload.active? }
       end
 
 
