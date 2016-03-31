@@ -90,6 +90,24 @@ module Gitomator
 
 
 
+      #
+      # @param opts [Hash]
+      # => @param :wait [Boolean] - Should this call block until the sync finishes (which can take a while)
+      # => @param :on_progress [Proc(Travis::Client::User)] - Will be called priodically, while waiting for the sync
+      #
+      def sync_with_github(opts={})
+        @travis.user.sync()
+
+        while opts[:wait] and @travis.user.reload.syncing?
+          if(opts[:on_progress])
+            opts[:on_progress].call(@travis.user)
+          end
+          sleep(1)
+        end
+      end
+
+
+
 
 
     end
