@@ -7,7 +7,6 @@ module Gitomator
     class CIProvider
 
 
-
       # ---------------------- Static Factory Methods --------------------------
 
       class << self
@@ -23,13 +22,18 @@ module Gitomator
       # @param github_org [String] - The default GitHub organization
       #
       def self.with_travis_access_token(access_token, github_org=nil, opts = {})
-        return new(
-          ::Travis::Client.new({
-            :uri          => ::Travis::Client::ORG_URI,
-            :access_token => access_token
-          }),
-          {org: github_org}
-        )
+        return with_uri_access_token_and_github_org(::Travis::Client::ORG_URI,
+                                                  access_token, github_org, opts)
+      end
+
+
+      #
+      # @param github_access_token [String] - An auth token for GitHub
+      # @param github_org [String] - The default GitHub organization
+      #
+      def self.with_github_access_token(github_access_token, github_org=nil, opts = {})
+        return with_uri_access_token_and_github_org(::Travis::Client::ORG_URI,
+                      Travis.github_auth(github_access_token), github_org, opts)
       end
 
 
@@ -41,11 +45,25 @@ module Gitomator
       # @param github_org [String] - The default GitHub organization
       #
       def self.with_travis_pro_access_token(access_token, github_org=nil, opts = {})
+        return with_uri_access_token_and_github_org(::Travis::Client::PRO_URI,
+                                                  access_token, github_org, opts)
+      end
+
+
+      #
+      # @param github_access_token [String] - An auth token for GitHub
+      # @param github_org [String] - The default GitHub organization
+      #
+      def self.with_travis_pro_and_github_access_token(github_access_token, github_org=nil, opts = {})
+        return with_uri_access_token_and_github_org(::Travis::Client::PRO_URI,
+                      Travis.github_auth(github_access_token), github_org, opts)
+      end
+
+
+      # Common helper
+      def self.with_uri_access_token_and_github_org(uri, access_token, github_org, opts = {})
         return new(
-          ::Travis::Client.new({
-            :uri          => ::Travis::Client::PRO_URI,
-            :access_token => access_token
-          }),
+          ::Travis::Client.new({:uri => uri, :access_token => access_token }),
           {org: github_org}
         )
       end
