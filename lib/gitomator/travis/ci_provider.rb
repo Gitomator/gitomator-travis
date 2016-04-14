@@ -13,6 +13,34 @@ module Gitomator
         private :new
       end
 
+      #
+      # @param config [Hash<String,Object>]
+      # @return [Gitomator::GitHub::HostingProvider] GitHub hosting provider.
+      #
+      def self.from_config(config = {})
+
+        if config['provider'] == 'travis'
+          uri = ::Travis::Client::ORG_URI
+        elsif config['provider'] == 'travis_pro'
+          uri = ::Travis::Client::PRO_URI
+        else
+          raise "Invalid Travis CI provider name, #{config['provider']}."
+        end
+
+        if config['access_token']
+          access_token = config['access_token']
+        elsif config['github_access_token']
+          access_token = ::Travis.github_auth(config['github_access_token'])
+        else
+          raise "Invalid Travis CI provider config - #{config}"
+        end
+
+        travis_client = ::Travis::Client.new({:uri => uri,
+                                              :access_token => access_token })
+
+        return new(travis_client, { :org => config['github_organization'] })
+      end
+
 
       #
       # Important: You will need to generate a Travis token (simple to do
