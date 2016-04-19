@@ -1,4 +1,3 @@
-require 'gitomator/service/ci/service'
 require 'gitomator/util/repo/name_resolver'
 require 'travis'
 
@@ -18,6 +17,7 @@ module Gitomator
       # @return [Gitomator::GitHub::HostingProvider] GitHub hosting provider.
       #
       def self.from_config(config = {})
+        config = config.map {|k,v| [k.to_s, v] } .to_h
 
         if config['provider'] == 'travis'
           uri = ::Travis::Client::ORG_URI
@@ -35,10 +35,8 @@ module Gitomator
           raise "Invalid Travis CI provider config - #{config}"
         end
 
-        travis_client = ::Travis::Client.new({:uri => uri,
-                                              :access_token => access_token })
-
-        return new(travis_client, { :org => config['github_organization'] })
+        travis_client = ::Travis::Client.new({:uri => uri, :access_token => access_token })
+        return new(travis_client, config['github_organization'])
       end
 
 
@@ -105,10 +103,10 @@ module Gitomator
       # @param opts [Hash]
       # => @param :org [String] - Default GitHub organization
       #
-      def initialize(travis_client, opts)
+      def initialize(travis_client, github_organization, opts={})
         raise "Travis client is nil" if travis_client.nil?
         @travis = travis_client
-        @org = opts[:org]
+        @org = github_organization
         @repo_name_resolver = Gitomator::Util::Repo::NameResolver.new(@org)
       end
 
