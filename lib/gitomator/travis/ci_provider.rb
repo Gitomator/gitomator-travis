@@ -40,68 +40,12 @@ module Gitomator
       end
 
 
-      #
-      # Important: You will need to generate a Travis token (simple to do
-      # with Travis' CLI - `travis login` followed by `travis token`)
-      #
-      # @param access_token [String] - An auth token for Travis
-      # @param github_org [String] - The default GitHub organization
-      #
-      def self.with_travis_access_token(access_token, github_org=nil, opts = {})
-        return with_uri_access_token_and_github_org(::Travis::Client::ORG_URI,
-                                                  access_token, github_org, opts)
-      end
-
-
-      #
-      # @param github_access_token [String] - An auth token for GitHub
-      # @param github_org [String] - The default GitHub organization
-      #
-      def self.with_github_access_token(github_access_token, github_org=nil, opts = {})
-        return with_uri_access_token_and_github_org(::Travis::Client::ORG_URI,
-                      Travis.github_auth(github_access_token), github_org, opts)
-      end
-
-
-      #
-      # Important: You will need to generate a Travis Pro token (simple to do
-      # with Travis' CLI - `travis login` followed by `travis token`)
-      #
-      # @param access_token [String] - An auth token for Travis Pro
-      # @param github_org [String] - The default GitHub organization
-      #
-      def self.with_travis_pro_access_token(access_token, github_org=nil, opts = {})
-        return with_uri_access_token_and_github_org(::Travis::Client::PRO_URI,
-                                                  access_token, github_org, opts)
-      end
-
-
-      #
-      # @param github_access_token [String] - An auth token for GitHub
-      # @param github_org [String] - The default GitHub organization
-      #
-      def self.with_travis_pro_and_github_access_token(github_access_token, github_org=nil, opts = {})
-        return with_uri_access_token_and_github_org(::Travis::Client::PRO_URI,
-                      Travis.github_auth(github_access_token), github_org, opts)
-      end
-
-
-      # Common helper
-      def self.with_uri_access_token_and_github_org(uri, access_token, github_org, opts = {})
-        return new(
-          ::Travis::Client.new({:uri => uri, :access_token => access_token }),
-          {org: github_org}
-        )
-      end
-
-
       # ------------------------------------------------------------------------
 
 
       #
       # @param travis_client [Travis::Client::Session]
-      # @param opts [Hash]
-      # => @param :org [String] - Default GitHub organization
+      # @param github_organization [String] - Default GitHub organization
       #
       def initialize(travis_client, github_organization, opts={})
         raise "Travis client is nil" if travis_client.nil?
